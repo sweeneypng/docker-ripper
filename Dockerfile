@@ -1,5 +1,27 @@
-FROM phusion/baseimage
-MAINTAINER rix1337
+FROM phusion/baseimage as cc
+RUN apt-get update \
+    && apt-get -y --allow-unauthenticated install \
+    gcc \
+    libcurl4-gnutls-dev \
+    tesseract-ocr \
+    libtesseract-dev \
+    libleptonica-dev \
+    autoconf \
+    pkg-config \
+    wget
+
+ARG VERSION="0.88"
+WORKDIR /ccextractor
+RUN wget -O ccextractor-${VERSION} https://github.com/CCExtractor/ccextractor/archive/v${VERSION}.tar.gz \
+    && tar xvzf ccextractor-${VERSION} \
+    && cd ccextractor-${VERSION}/linux \
+    && ./autogen.sh \
+    && ./configure \
+    && make \
+    && cp ccextractor /usr/local/bin/ccextractor
+
+
+FROM cc
 
 # Set correct environment variables
 ENV HOME /root
@@ -27,7 +49,7 @@ RUN chmod +x /etc/my_init.d/*.sh
 
 # Install software
 RUN apt-get update \
- && apt-get -y --allow-unauthenticated install gddrescue ripit wget eject lame curl
+ && apt-get -y --allow-unauthenticated install gddrescue ripit wget eject lame curl git
  
 # MakeMKV/FFMPEG setup by github.com/tobbenb
 RUN chmod +x /tmp/install/install.sh && sleep 1 && /tmp/install/install.sh && rm -r /tmp/install
